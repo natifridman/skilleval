@@ -20,6 +20,7 @@ export const checkCommand = new Command("check")
   .option("--fix", "Auto-fix fixable issues")
   .option("--deep", "Run LLM-powered deep analysis")
   .option("--deep-provider <name>", "LLM provider: anthropic, vertex")
+  .option("--deep-model <name>", "LLM model to use for deep analysis")
   .option("--strict", "Treat warnings as errors")
   .option("--rule <id>", "Run only specific rules (repeatable)", collect, [])
   .option("--category <name>", "Run only rules in a category (repeatable)", collect, [])
@@ -40,7 +41,7 @@ export const checkCommand = new Command("check")
       if (options.deep) {
         try {
           const providerName = options.deepProvider ?? config.deep?.provider;
-          const provider = resolveProvider(providerName, config.deep?.model);
+          const provider = resolveProvider(providerName, options.deepModel ?? config.deep?.model);
           const skill = await parseSkill(path);
           const deepResult = await runDeepAnalysis(skill, provider);
           const deepDiags = deepFindingsToDiagnostics(
