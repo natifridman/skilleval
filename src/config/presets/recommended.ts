@@ -1,0 +1,45 @@
+import type { RuleSeverityConfig } from "../types.js";
+
+export const recommended: Record<string, RuleSeverityConfig> = {
+  "structural/skill-md-exists": "error",
+  "structural/directory-structure": "info",
+  "structural/no-extra-top-level-files": "info",
+  "structural/file-references-valid": "warning",
+
+  "frontmatter/frontmatter-present": "error",
+  "frontmatter/name-required": "error",
+  "frontmatter/name-format": "error",
+  "frontmatter/name-matches-directory": "error",
+  "frontmatter/description-required": "error",
+  "frontmatter/description-length": "error",
+  "frontmatter/description-quality": "warning",
+  "frontmatter/no-extra-fields": "error",
+  "frontmatter/compatibility-length": "error",
+  "frontmatter/metadata-types": "error",
+  "frontmatter/allowed-tools-format": "warning",
+
+  "content/body-not-empty": "warning",
+  "content/body-token-budget": "warning",
+  "content/body-line-limit": "warning",
+  "content/has-headings": "info",
+  "content/no-html-in-body": "info",
+  "content/references-depth": "info",
+
+  "security/no-prompt-injection": "error",
+  "security/no-base64-payloads": "error",
+  "security/no-credential-access": "error",
+  "security/no-curl-bash": "error",
+  "security/no-remote-fetch": "warning",
+  "security/no-obfuscation": "error",
+  "security/no-memory-poisoning": "error",
+  "security/no-secret-literals": "warning",
+  "security/no-password-archives": "error",
+
+  "best-practices/description-has-trigger-words": "info",
+  "best-practices/progressive-disclosure": "info",
+  "best-practices/scripts-are-referenced": "info",
+  "best-practices/has-examples": "info",
+  "best-practices/gotchas-section": "info",
+  "best-practices/pinned-versions": "info",
+  "best-practices/scripts-have-help": "info",
+};

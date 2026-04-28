@@ -1,0 +1,111 @@
+import type { ParsedSkill, FrontmatterData } from "../src/parser/types.js";
+import type { RuleContext, Rule, Diagnostic, ReportDescriptor } from "../src/engine/types.js";
+
+interface TestSkillOptions {
+  dirPath?: string;
+  dirName?: string;
+  skillMdPath?: string;
+  rawContent?: string;
+  frontmatter?: FrontmatterData;
+  rawFrontmatter?: string;
+  frontmatterStartLine?: number;
+  frontmatterEndLine?: number;
+  body?: string;
+  bodyStartLine?: number;
+  parseErrors?: string[];
+}
+
+export function createTestSkill(options: TestSkillOptions = {}): ParsedSkill {
+  return {
+    dirPath: options.dirPath ?? "/test/my-skill",
+    dirName: options.dirName ?? "my-skill",
+    skillMdPath: options.skillMdPath ?? "/test/my-skill/SKILL.md",
+    rawContent: options.rawContent ?? "---\nname: my-skill\n---\n# Test",
+    frontmatter: options.frontmatter ?? { name: "my-skill", description: "A test skill" },
+    rawFrontmatter: options.rawFrontmatter ?? "name: my-skill\ndescription: A test skill",
+    frontmatterStartLine: options.frontmatterStartLine ?? 1,
+    frontmatterEndLine: options.frontmatterEndLine ?? 3,
+    body: options.body ?? "# Test\n",
+    bodyStartLine: options.bodyStartLine ?? 4,
+    mdast: { type: "root", children: [] },
+    files: [],
+    parseErrors: options.parseErrors ?? [],
+  };
+}
+
+export interface TestContext {
+  diagnostics: Diagnostic[];
+  context: RuleContext;
+}
+
+export function createTestContext(
+  skillOptions: TestSkillOptions = {},
+): TestContext {
+  const skill = createTestSkill(skillOptions);
+  const diagnostics: Diagnostic[] = [];
+
+  const context: RuleContext = {
+    skill,
+    severity: "error",
+    options: [],
+    report(descriptor: ReportDescriptor) {
+      diagnostics.push({
+        ruleId: "test-rule",
+        severity: context.severity,
+        message: descriptor.messageId,
+        location: {
+          file: descriptor.location?.file ?? skill.skillMdPath,
+          startLine: descriptor.location?.startLine,
+          startColumn: descriptor.location?.startColumn,
+        },
+        fix: descriptor.fix,
+        category: "frontmatter",
+      });
+    },
+  };
+
+  return { diagnostics, context };
+}
+
+function interpolateMessage(
+  template: string,
+  data?: Record<string, string | number>,
+): string {
+  if (!data) return template;
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
+    data[key] !== undefined ? String(data[key]) : `{{${key}}}`,
+  );
+}
+
+export async function runRule(
+  rule: Rule,
+  skillOptions: TestSkillOptions = {},
+): Promise<Diagnostic[]> {
+  const skill = createTestSkill(skillOptions);
+  const diagnostics: Diagnostic[] = [];
+
+  const context: RuleContext = {
+    skill,
+    severity: rule.meta.defaultSeverity,
+    options: [],
+    report(descriptor: ReportDescriptor) {
+      const template = rule.meta.messages[descriptor.messageId] ?? descriptor.messageId;
+      const message = interpolateMessage(template, descriptor.data);
+      diagnostics.push({
+        ruleId: rule.meta.id,
+        severity: context.severity,
+        message,
+        location: {
+          file: descriptor.location?.file ?? skill.skillMdPath,
+          startLine: descriptor.location?.startLine,
+          startColumn: descriptor.location?.startColumn,
+        },
+        fix: descriptor.fix,
+        category: rule.meta.category,
+      });
+    },
+  };
+
+  await rule.create(context);
+  return diagnostics;
+}

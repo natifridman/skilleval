@@ -1,0 +1,45 @@
+import type { RuleSeverityConfig } from "../types.js";
+
+export const security: Record<string, RuleSeverityConfig> = {
+  "structural/skill-md-exists": "error",
+  "structural/directory-structure": "off",
+  "structural/no-extra-top-level-files": "off",
+  "structural/file-references-valid": "off",
+
+  "frontmatter/frontmatter-present": "error",
+  "frontmatter/name-required": "off",
+  "frontmatter/name-format": "off",
+  "frontmatter/name-matches-directory": "off",
+  "frontmatter/description-required": "off",
+  "frontmatter/description-length": "off",
+  "frontmatter/description-quality": "off",
+  "frontmatter/no-extra-fields": "off",
+  "frontmatter/compatibility-length": "off",
+  "frontmatter/metadata-types": "off",
+  "frontmatter/allowed-tools-format": "off",
+
+  "content/body-not-empty": "off",
+  "content/body-token-budget": "off",
+  "content/body-line-limit": "off",
+  "content/has-headings": "off",
+  "content/no-html-in-body": "off",
+  "content/references-depth": "off",
+
+  "security/no-prompt-injection": "error",
+  "security/no-base64-payloads": "error",
+  "security/no-credential-access": "error",
+  "security/no-curl-bash": "error",
+  "security/no-remote-fetch": "error",
+  "security/no-obfuscation": "error",
+  "security/no-memory-poisoning": "error",
+  "security/no-secret-literals": "error",
+  "security/no-password-archives": "error",
+
+  "best-practices/description-has-trigger-words": "off",
+  "best-practices/progressive-disclosure": "off",
+  "best-practices/scripts-are-referenced": "off",
+  "best-practices/has-examples": "off",
+  "best-practices/gotchas-section": "off",
+  "best-practices/pinned-versions": "off",
+  "best-practices/scripts-have-help": "off",
+};

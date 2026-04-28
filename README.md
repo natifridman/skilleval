@@ -1,0 +1,234 @@
+# skilleval
+
+Linter for AI agent skill files following the [Agent Skills specification](https://agentskills.io).
+
+37 rules across 5 categories: structural, frontmatter, content, security, and best practices. Supports text, JSON, SARIF, and GitHub Actions output formats. Optional LLM-powered deep analysis via Anthropic API or Google Cloud Vertex AI.
+
+## Install
+
+```bash
+npx skilleval check ./my-skill
+```
+
+Or install globally:
+
+```bash
+npm install -g skilleval
+```
+
+## Quick Start
+
+```bash
+# Lint a skill directory
+skilleval check ./my-skill
+
+# Lint multiple skills
+skilleval check ./skill-a ./skill-b
+
+# Scaffold a new skill
+skilleval new my-new-skill
+
+# List all 37 rules
+skilleval rules
+```
+
+## Commands
+
+### `skilleval check <paths...>`
+
+Lint and evaluate skill directories.
+
+```bash
+skilleval check ./my-skill
+skilleval check ./my-skill --format json
+skilleval check ./my-skill --format sarif > results.sarif
+skilleval check ./my-skill --format github
+skilleval check ./my-skill --strict
+skilleval check ./my-skill --fix
+skilleval check ./my-skill --deep
+skilleval check ./my-skill --deep --deep-provider vertex
+```
+
+| Flag | Description |
+|------|-------------|
+| `-f, --format <type>` | Output format: `text`, `json`, `sarif`, `github` (default: `text`) |
+| `--fix` | Auto-fix fixable issues |
+| `--deep` | Run LLM-powered semantic analysis |
+| `--deep-provider <name>` | LLM provider: `anthropic`, `vertex` (auto-detected) |
+| `--strict` | Treat warnings as errors |
+| `-c, --config <path>` | Path to config file |
+| `-q, --quiet` | Suppress output |
+
+Exit codes: `0` = pass, `1` = errors found, `2` = warnings with `--strict`, `3` = CLI error.
+
+### `skilleval rules`
+
+List all available rules.
+
+```bash
+skilleval rules
+skilleval rules --category security
+skilleval rules --severity error
+```
+
+### `skilleval init`
+
+Create a `.skillevalrc.json` config file in the current directory.
+
+### `skilleval new <name>`
+
+Scaffold a new skill directory with a `SKILL.md` template.
+
+## Rules (37)
+
+### Structural (4)
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `structural/skill-md-exists` | error | SKILL.md must exist |
+| `structural/directory-structure` | info | Warn on non-standard directories |
+| `structural/no-extra-top-level-files` | info | Warn on unexpected root files |
+| `structural/file-references-valid` | warning | Referenced file paths must exist |
+
+### Frontmatter (11)
+
+| Rule | Severity | Fixable | Description |
+|------|----------|---------|-------------|
+| `frontmatter/frontmatter-present` | error | | Must have YAML frontmatter |
+| `frontmatter/name-required` | error | | `name` is required |
+| `frontmatter/name-format` | error | yes | 1-64 chars, lowercase, hyphens |
+| `frontmatter/name-matches-directory` | error | | Must match parent directory |
+| `frontmatter/description-required` | error | | `description` is required |
+| `frontmatter/description-length` | error | | 1-1024 characters |
+| `frontmatter/description-quality` | warning | | Must be substantive |
+| `frontmatter/no-extra-fields` | error | | Only 6 allowed fields |
+| `frontmatter/compatibility-length` | error | | Max 500 characters |
+| `frontmatter/metadata-types` | error | | Must be string-to-string map |
+| `frontmatter/allowed-tools-format` | warning | | Must be space-separated string |
+
+### Content (6)
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `content/body-not-empty` | warning | Body must not be empty |
+| `content/body-token-budget` | warning | Body under 5000 tokens |
+| `content/body-line-limit` | warning | Body under 500 lines |
+| `content/has-headings` | info | Should have headings |
+| `content/no-html-in-body` | info | No raw HTML tags |
+| `content/references-depth` | info | References one level deep |
+
+### Security (9)
+
+Based on [Snyk ToxicSkills](https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/) research and [OWASP Agentic Skills Top 10](https://owasp.org/www-project-agentic-skills-top-10/).
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `security/no-prompt-injection` | error | Detects prompt injection patterns |
+| `security/no-base64-payloads` | error | Detects obfuscated base64 content |
+| `security/no-credential-access` | error | Detects sensitive file/env access |
+| `security/no-curl-bash` | error | Detects pipe-to-shell execution |
+| `security/no-remote-fetch` | warning | Detects untrusted remote content |
+| `security/no-obfuscation` | error | Detects Unicode smuggling |
+| `security/no-memory-poisoning` | error | Detects agent config writes |
+| `security/no-secret-literals` | warning | Detects hardcoded secrets |
+| `security/no-password-archives` | error | Detects password-protected archives |
+
+### Best Practices (7)
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `best-practices/description-has-trigger-words` | info | Use imperative phrasing |
+| `best-practices/progressive-disclosure` | info | Split large bodies into references/ |
+| `best-practices/scripts-are-referenced` | info | Scripts should be referenced in body |
+| `best-practices/has-examples` | info | Should contain code blocks |
+| `best-practices/gotchas-section` | info | Non-trivial skills need gotchas |
+| `best-practices/pinned-versions` | info | Pin package versions |
+| `best-practices/scripts-have-help` | info | Scripts should support --help |
+
+## Configuration
+
+Create `.skillevalrc.json` (or use `skilleval init`):
+
+```json
+{
+  "extends": "recommended",
+  "rules": {
+    "content/no-html-in-body": "off",
+    "best-practices/gotchas-section": "warning"
+  },
+  "ignore": ["node_modules", ".git"]
+}
+```
+
+Config is discovered via [lilconfig](https://github.com/antonk52/lilconfig): `.skillevalrc.json`, `.skillevalrc.yaml`, `skilleval.config.js`, or `package.json["skilleval"]`.
+
+### Presets
+
+| Preset | Description |
+|--------|-------------|
+| `recommended` | All spec rules as errors, best practices as info (default) |
+| `strict` | Recommended + best practices elevated to warnings |
+| `security` | Security rules only, all as errors |
+
+## Deep Analysis (`--deep`)
+
+Optional LLM-powered semantic analysis that catches issues regex can't:
+
+- Subtle prompt injection and social engineering
+- Self-contradicting instructions
+- Description-body misalignment
+- System message impersonation
+- Script safety issues
+
+### Setup
+
+**Anthropic API:**
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+skilleval check ./my-skill --deep
+```
+
+**Google Cloud Vertex AI:**
+```bash
+export GOOGLE_CLOUD_PROJECT=my-project
+export GOOGLE_CLOUD_LOCATION=us-east5
+skilleval check ./my-skill --deep --deep-provider vertex
+```
+
+Requires installing the provider SDK:
+```bash
+npm install @anthropic-ai/sdk          # For Anthropic
+npm install @anthropic-ai/vertex-sdk   # For Vertex AI
+```
+
+## CI/CD
+
+### GitHub Actions
+
+```yaml
+- uses: actions/setup-node@v4
+- run: npx skilleval check ./skills --format sarif > results.sarif
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: results.sarif
+```
+
+### GitHub Annotations
+
+```yaml
+- run: npx skilleval check ./skills --format github
+```
+
+## Programmatic API
+
+```typescript
+import { lint, registerAllRules } from "skilleval";
+
+registerAllRules();
+const result = await lint("./my-skill");
+console.log(result.errorCount, result.diagnostics);
+```
+
+## License
+
+MIT
