@@ -229,6 +229,12 @@ const result = await lint("./my-skill");
 console.log(result.errorCount, result.diagnostics);
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, how to add rules, and PR guidelines.
+
+AI agents: see [AGENTS.md](AGENTS.md) for codebase architecture and conventions.
+
 ## License
 
 MIT
