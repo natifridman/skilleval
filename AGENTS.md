@@ -128,10 +128,10 @@ Create test skill directories in `tests/fixtures/` for integration tests.
 | Category | Directory | Type | Count |
 |----------|-----------|------|-------|
 | structural | `src/rules/structural/` | File/directory structure checks | 4 |
-| frontmatter | `src/rules/frontmatter/` | YAML frontmatter validation | 11 |
-| content | `src/rules/content/` | Markdown body quality | 6 |
+| frontmatter | `src/rules/frontmatter/` | YAML frontmatter validation | 12 |
+| content | `src/rules/content/` | Markdown body quality | 8 |
 | security | `src/rules/security/` | Prompt injection, credential theft, obfuscation | 9 |
-| best-practices | `src/rules/best-practices/` | agentskills.io recommendations | 7 |
+| best-practices | `src/rules/best-practices/` | agentskills.io recommendations | 14 |
 
 ## ParsedSkill fields available to rules
 

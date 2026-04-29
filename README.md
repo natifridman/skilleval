@@ -2,7 +2,7 @@
 
 Linter for AI agent skill files following the [Agent Skills specification](https://agentskills.io).
 
-37 rules across 5 categories: structural, frontmatter, content, security, and best practices. Supports text, JSON, SARIF, and GitHub Actions output formats. Optional LLM-powered deep analysis via Anthropic API or Google Cloud Vertex AI.
+47 rules across 5 categories: structural, frontmatter, content, security, and best practices. Supports text, JSON, SARIF, and GitHub Actions output formats. Optional LLM-powered deep analysis via Anthropic API or Google Cloud Vertex AI.
 
 ## Install
 
@@ -73,7 +73,7 @@ skilleval check https://github.com/org/repo/tree/main/skills/my-skill
 # Scaffold a new skill
 skilleval new my-new-skill
 
-# List all 37 rules
+# List all 47 rules
 skilleval rules
 ```
 
@@ -105,9 +105,13 @@ skilleval check github:org/repo
 | `--fix` | Auto-fix fixable issues |
 | `--deep` | Run LLM-powered semantic analysis |
 | `--deep-provider <name>` | LLM provider: `anthropic`, `vertex` (auto-detected) |
+| `--deep-model <name>` | LLM model to use for deep analysis |
 | `--strict` | Treat warnings as errors |
+| `--rule <id>` | Run only specific rules (repeatable) |
+| `--category <name>` | Run only rules in a category (repeatable) |
 | `-c, --config <path>` | Path to config file |
-| `-q, --quiet` | Suppress output |
+| `--no-config` | Ignore config files, use defaults |
+| `-q, --quiet` | Suppress all output except errors |
 
 Exit codes: `0` = pass, `1` = errors found, `2` = warnings with `--strict`, `3` = CLI error.
 
@@ -129,7 +133,7 @@ Create a `.skillevalrc.json` config file in the current directory.
 
 Scaffold a new skill directory with a `SKILL.md` template.
 
-## Rules (37)
+## Rules (47)
 
 ### Structural (4)
 
@@ -140,7 +144,7 @@ Scaffold a new skill directory with a `SKILL.md` template.
 | `structural/no-extra-top-level-files` | info | Warn on unexpected root files |
 | `structural/file-references-valid` | warning | Referenced file paths must exist |
 
-### Frontmatter (11)
+### Frontmatter (12)
 
 | Rule | Severity | Fixable | Description |
 |------|----------|---------|-------------|
@@ -148,6 +152,7 @@ Scaffold a new skill directory with a `SKILL.md` template.
 | `frontmatter/name-required` | error | | `name` is required |
 | `frontmatter/name-format` | error | yes | 1-64 chars, lowercase, hyphens |
 | `frontmatter/name-matches-directory` | error | | Must match parent directory |
+| `frontmatter/name-no-reserved-words` | error | | Must not contain reserved words ('anthropic', 'claude') |
 | `frontmatter/description-required` | error | | `description` is required |
 | `frontmatter/description-length` | error | | 1-1024 characters |
 | `frontmatter/description-quality` | warning | | Must be substantive |
@@ -156,7 +161,7 @@ Scaffold a new skill directory with a `SKILL.md` template.
 | `frontmatter/metadata-types` | error | | Must be string-to-string map |
 | `frontmatter/allowed-tools-format` | warning | | Must be space-separated string |
 
-### Content (6)
+### Content (8)
 
 | Rule | Severity | Description |
 |------|----------|-------------|
@@ -166,6 +171,8 @@ Scaffold a new skill directory with a `SKILL.md` template.
 | `content/has-headings` | info | Should have headings |
 | `content/no-html-in-body` | info | No raw HTML tags |
 | `content/references-depth` | info | References one level deep |
+| `content/no-backslash-paths` | info | Use forward slashes for cross-platform compatibility |
+| `content/no-ascii-art` | info | No decorative ASCII art or box-drawing characters |
 
 ### Security (9)
 
@@ -183,17 +190,24 @@ Based on [Snyk ToxicSkills](https://snyk.io/blog/toxicskills-malicious-ai-agent-
 | `security/no-secret-literals` | warning | Detects hardcoded secrets |
 | `security/no-password-archives` | error | Detects password-protected archives |
 
-### Best Practices (7)
+### Best Practices (14)
 
 | Rule | Severity | Description |
 |------|----------|-------------|
 | `best-practices/description-has-trigger-words` | info | Use imperative phrasing |
+| `best-practices/description-no-first-person` | warning | Use third-person voice in descriptions |
 | `best-practices/progressive-disclosure` | info | Split large bodies into references/ |
 | `best-practices/scripts-are-referenced` | info | Scripts should be referenced in body |
 | `best-practices/has-examples` | info | Should contain code blocks |
 | `best-practices/gotchas-section` | info | Non-trivial skills need gotchas |
 | `best-practices/pinned-versions` | info | Pin package versions |
 | `best-practices/scripts-have-help` | info | Scripts should support --help |
+| `best-practices/no-generic-names` | info | Avoid generic names like 'helper' or 'utils' |
+| `best-practices/no-persona-instructions` | warning | Provide instructions, not persona assignments |
+| `best-practices/no-vague-instructions` | info | Avoid vague directives like 'follow best practices' |
+| `best-practices/no-time-sensitive-content` | info | Avoid time-sensitive language that becomes stale |
+| `best-practices/no-excessive-negation` | info | Tell agents what to do, not what not to do |
+| `best-practices/non-descriptive-filenames` | info | Use descriptive filenames, not generic ones |
 
 ## Configuration
 
