@@ -16,6 +16,44 @@ Or install globally:
 npm install -g skilleval
 ```
 
+## Run from Source
+
+```bash
+git clone https://github.com/natifridman/skilleval.git
+cd skilleval
+npm install
+npm run build
+npm link
+```
+
+This makes the `skilleval` command available globally, so you can use it like the published package:
+
+```bash
+skilleval check ./my-skill
+skilleval check https://github.com/org/repo
+skilleval rules
+```
+
+To rebuild after making changes:
+
+```bash
+npm run build
+```
+
+Or use watch mode for continuous rebuilds during development:
+
+```bash
+npm run dev
+```
+
+To unlink when done:
+
+```bash
+npm unlink -g skilleval
+```
+
+Requires Node.js >= 22.
+
 ## Quick Start
 
 ```bash
