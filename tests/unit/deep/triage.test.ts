@@ -50,7 +50,7 @@ describe("triageDiagnostics", () => {
     expect(reviews[0].reason).toContain("example");
   });
 
-  it("skips non-security diagnostics", async () => {
+  it("skips non-triageable diagnostics", async () => {
     const provider = createMockProvider("{}");
 
     const skill = createTestSkill();
@@ -71,6 +71,36 @@ describe("triageDiagnostics", () => {
 
     const reviews = await triageDiagnostics(skill, diagnostics, provider);
     expect(reviews).toHaveLength(0);
+  });
+
+  it("includes best-practices diagnostics in triage", async () => {
+    const provider = createMockProvider(JSON.stringify({
+      reviews: [
+        {
+          ruleId: "best-practices/no-persona-instructions",
+          line: 5,
+          dismiss: true,
+          reason: "Persona instruction is inside an example block",
+        },
+      ],
+    }));
+
+    const skill = createTestSkill({
+      rawContent: "---\nname: test\n---\n# Test",
+    });
+    const diagnostics = [
+      createDiag({
+        category: "best-practices",
+        ruleId: "best-practices/no-persona-instructions",
+        location: { file: "SKILL.md", startLine: 5 },
+        message: "Persona instruction detected",
+      }),
+    ];
+
+    const reviews = await triageDiagnostics(skill, diagnostics, provider);
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0].dismiss).toBe(true);
+    expect(provider.analyze).toHaveBeenCalled();
   });
 
   it("handles LLM returning dismiss: false", async () => {

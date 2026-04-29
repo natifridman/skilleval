@@ -1,7 +1,7 @@
 import type { Severity } from "../engine/types.js";
 
 export interface DeepFinding {
-  aspect: "security" | "coherence" | "alignment" | "completeness" | "tone";
+  aspect: "security" | "coherence" | "alignment" | "completeness" | "tone" | "design-patterns";
   severity: Severity;
   finding: string;
   location?: string;

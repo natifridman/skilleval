@@ -5,6 +5,12 @@ import { hasExamples } from "../../../src/rules/best-practices/has-examples.js";
 import { gotchasSection } from "../../../src/rules/best-practices/gotchas-section.js";
 import { pinnedVersions } from "../../../src/rules/best-practices/pinned-versions.js";
 import { noGenericNames } from "../../../src/rules/best-practices/no-generic-names.js";
+import { noPersonaInstructions } from "../../../src/rules/best-practices/no-persona-instructions.js";
+import { noVagueInstructions } from "../../../src/rules/best-practices/no-vague-instructions.js";
+import { descriptionNoFirstPerson } from "../../../src/rules/best-practices/description-no-first-person.js";
+import { noTimeSensitiveContent } from "../../../src/rules/best-practices/no-time-sensitive-content.js";
+import { noExcessiveNegation } from "../../../src/rules/best-practices/no-excessive-negation.js";
+import { nonDescriptiveFilenames } from "../../../src/rules/best-practices/non-descriptive-filenames.js";
 
 describe("best-practices/description-has-trigger-words", () => {
   it("passes with trigger phrasing", async () => {
@@ -140,5 +146,269 @@ describe("best-practices/no-generic-names", () => {
       rawFrontmatter: "description: test",
     });
     expect(d).toHaveLength(0);
+  });
+});
+
+describe("best-practices/no-persona-instructions", () => {
+  it("passes for normal instructions", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "# Deployment\n\nRun the deploy script when ready.",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports 'You are a...' persona", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "# Setup\n\nYou are a senior DevOps engineer.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("Persona");
+  });
+
+  it("reports 'Act as a...' persona", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "Act as a database expert and help with queries.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("Persona");
+  });
+
+  it("reports 'Assume the role of...' persona", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "Assume the role of a security auditor.",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("skips persona text inside code blocks", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "# Example\n\n```\nYou are a helpful assistant.\n```\n",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("downgrades to info when in blockquote", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "> You are a senior engineer.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].severity).toBe("info");
+  });
+
+  it("detects persona in bullet points", async () => {
+    const d = await runRule(noPersonaInstructions, {
+      body: "- You are a code reviewer.\n- Check all files.",
+    });
+    expect(d).toHaveLength(1);
+  });
+});
+
+describe("best-practices/no-vague-instructions", () => {
+  it("passes for specific instructions", async () => {
+    const d = await runRule(noVagueInstructions, {
+      body: "# Steps\n\n- Run pytest with --cov flag\n- Check coverage > 80%\n- Fix any failing tests",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes for 1-2 vague phrases (below threshold)", async () => {
+    const d = await runRule(noVagueInstructions, {
+      body: "# Guidelines\n\n- Follow best practices for error handling\n- Run tests before deploying",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports 3+ vague phrases", async () => {
+    const d = await runRule(noVagueInstructions, {
+      body: "# Guidelines\n\n- Follow best practices\n- Handle errors appropriately\n- Ensure quality of the output",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("vague");
+  });
+
+  it("skips vague phrases inside code blocks", async () => {
+    const d = await runRule(noVagueInstructions, {
+      body: "```\nfollow best practices\nhandle errors appropriately\nensure quality\n```",
+    });
+    expect(d).toHaveLength(0);
+  });
+});
+
+describe("best-practices/description-no-first-person", () => {
+  it("passes for third-person description", async () => {
+    const d = await runRule(descriptionNoFirstPerson, {
+      frontmatter: { description: "Processes PDF files and extracts tables" },
+      rawFrontmatter: "description: Processes PDF files and extracts tables",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports first-person 'I can'", async () => {
+    const d = await runRule(descriptionNoFirstPerson, {
+      frontmatter: { description: "I can help you process PDF files" },
+      rawFrontmatter: "description: I can help you process PDF files",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("third-person");
+  });
+
+  it("reports second-person 'You can'", async () => {
+    const d = await runRule(descriptionNoFirstPerson, {
+      frontmatter: { description: "You can use this to process PDFs" },
+      rawFrontmatter: "description: You can use this to process PDFs",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("reports 'We will'", async () => {
+    const d = await runRule(descriptionNoFirstPerson, {
+      frontmatter: { description: "We will handle all your deployment needs" },
+      rawFrontmatter: "description: We will handle all your deployment needs",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("passes for 'Use when...' trigger phrase", async () => {
+    const d = await runRule(descriptionNoFirstPerson, {
+      frontmatter: { description: "Use when deploying to production" },
+      rawFrontmatter: "description: Use when deploying to production",
+    });
+    expect(d).toHaveLength(0);
+  });
+});
+
+describe("best-practices/no-time-sensitive-content", () => {
+  it("passes for timeless content", async () => {
+    const d = await runRule(noTimeSensitiveContent, {
+      body: "# Setup\n\nInstall dependencies with npm install.",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports 'before Month Year' pattern", async () => {
+    const d = await runRule(noTimeSensitiveContent, {
+      body: "If before August 2025, use the old API endpoint.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("Time-sensitive");
+  });
+
+  it("reports 'as of this writing'", async () => {
+    const d = await runRule(noTimeSensitiveContent, {
+      body: "As of this writing, the latest version is 3.2.",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("reports 'currently supports'", async () => {
+    const d = await runRule(noTimeSensitiveContent, {
+      body: "The tool currently supports Python 3.10+.",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("skips time-sensitive patterns in code blocks", async () => {
+    const d = await runRule(noTimeSensitiveContent, {
+      body: "```\ncurrently supports v3\n```",
+    });
+    expect(d).toHaveLength(0);
+  });
+});
+
+describe("best-practices/no-excessive-negation", () => {
+  it("passes for positive instructions", async () => {
+    const d = await runRule(noExcessiveNegation, {
+      body: "- Run tests first\n- Check coverage\n- Deploy to staging",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes for a few negations below threshold", async () => {
+    const body = [
+      "- Do the thing",
+      "- Run tests",
+      "- Don't skip validation",
+      "- Never push to main",
+      "- Check coverage",
+      "- Review the diff",
+      "- Deploy carefully",
+    ].join("\n");
+    const d = await runRule(noExcessiveNegation, { body });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports excessive negation (>30% and >=5 negative)", async () => {
+    const body = [
+      "- Don't use eval",
+      "- Never skip tests",
+      "- Do not hardcode secrets",
+      "- Avoid global state",
+      "- Must not use var",
+      "- Cannot access production directly",
+      "- Run tests",
+      "- Check output",
+    ].join("\n");
+    const d = await runRule(noExcessiveNegation, { body });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("prohibitions");
+  });
+
+  it("skips bullets inside code blocks", async () => {
+    const body = "```\n- Don't use eval\n- Never skip\n- Avoid globals\n- Must not\n- Cannot do\n```\n- Run tests";
+    const d = await runRule(noExcessiveNegation, { body });
+    expect(d).toHaveLength(0);
+  });
+});
+
+describe("best-practices/non-descriptive-filenames", () => {
+  it("passes for descriptive filenames", async () => {
+    const d = await runRule(nonDescriptiveFilenames, {
+      files: [
+        { path: "/test/my-skill/references/api-guide.md", relativePath: "references/api-guide.md" },
+        { path: "/test/my-skill/scripts/validate.py", relativePath: "scripts/validate.py" },
+      ],
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports generic filename 'doc1.md'", async () => {
+    const d = await runRule(nonDescriptiveFilenames, {
+      files: [
+        { path: "/test/my-skill/references/doc1.md", relativePath: "references/doc1.md" },
+      ],
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("doc1.md");
+  });
+
+  it("reports generic filename 'data.txt'", async () => {
+    const d = await runRule(nonDescriptiveFilenames, {
+      files: [
+        { path: "/test/my-skill/data.txt", relativePath: "data.txt" },
+      ],
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("data.txt");
+  });
+
+  it("skips allowed root files", async () => {
+    const d = await runRule(nonDescriptiveFilenames, {
+      files: [
+        { path: "/test/my-skill/SKILL.md", relativePath: "SKILL.md" },
+        { path: "/test/my-skill/README.md", relativePath: "README.md" },
+        { path: "/test/my-skill/LICENSE", relativePath: "LICENSE" },
+      ],
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports 'notes.md'", async () => {
+    const d = await runRule(nonDescriptiveFilenames, {
+      files: [
+        { path: "/test/my-skill/notes.md", relativePath: "notes.md" },
+      ],
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("notes.md");
   });
 });

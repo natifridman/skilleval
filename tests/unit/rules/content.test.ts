@@ -5,6 +5,7 @@ import { bodyTokenBudget } from "../../../src/rules/content/body-token-budget.js
 import { bodyLineLimit } from "../../../src/rules/content/body-line-limit.js";
 import { hasHeadings } from "../../../src/rules/content/has-headings.js";
 import { noBackslashPaths } from "../../../src/rules/content/no-backslash-paths.js";
+import { noAsciiArt } from "../../../src/rules/content/no-ascii-art.js";
 
 describe("content/body-not-empty", () => {
   it("passes for non-empty body", async () => {
@@ -94,5 +95,44 @@ describe("content/no-backslash-paths", () => {
       body: "# My Skill\nThis skill does things.",
     });
     expect(d).toHaveLength(0);
+  });
+});
+
+describe("content/no-ascii-art", () => {
+  it("passes for normal markdown", async () => {
+    const d = await runRule(noAsciiArt, {
+      body: "# Setup\n\nRun the deploy script.\n\n- Step one\n- Step two",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports box-drawing characters", async () => {
+    const d = await runRule(noAsciiArt, {
+      body: "# Layout\n\n┌──────────────┐\n│  My Skill    │\n└──────────────┘",
+    });
+    expect(d.length).toBeGreaterThan(0);
+    expect(d[0].message).toContain("ASCII art");
+  });
+
+  it("reports repeated decorative characters", async () => {
+    const d = await runRule(noAsciiArt, {
+      body: "# Title\n\n=============================\n\nContent here.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("Decorative");
+  });
+
+  it("skips decorative content inside code blocks", async () => {
+    const d = await runRule(noAsciiArt, {
+      body: "# Example\n\n```\n=============================\n┌──────┐\n```\n",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports tilde decorations", async () => {
+    const d = await runRule(noAsciiArt, {
+      body: "~~~~~~~~~~~~~~~~~~~~",
+    });
+    expect(d).toHaveLength(1);
   });
 });

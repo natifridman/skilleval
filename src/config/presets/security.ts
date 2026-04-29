@@ -17,6 +17,7 @@ export const security: Record<string, RuleSeverityConfig> = {
   "frontmatter/compatibility-length": "off",
   "frontmatter/metadata-types": "off",
   "frontmatter/allowed-tools-format": "off",
+  "frontmatter/name-no-reserved-words": "off",
 
   "content/body-not-empty": "off",
   "content/body-token-budget": "off",
@@ -25,6 +26,7 @@ export const security: Record<string, RuleSeverityConfig> = {
   "content/no-html-in-body": "off",
   "content/references-depth": "off",
   "content/no-backslash-paths": "off",
+  "content/no-ascii-art": "off",
 
   "security/no-prompt-injection": "error",
   "security/no-base64-payloads": "error",
@@ -44,4 +46,10 @@ export const security: Record<string, RuleSeverityConfig> = {
   "best-practices/pinned-versions": "off",
   "best-practices/scripts-have-help": "off",
   "best-practices/no-generic-names": "off",
+  "best-practices/no-persona-instructions": "off",
+  "best-practices/no-vague-instructions": "off",
+  "best-practices/description-no-first-person": "off",
+  "best-practices/no-time-sensitive-content": "off",
+  "best-practices/no-excessive-negation": "off",
+  "best-practices/non-descriptive-filenames": "off",
 };

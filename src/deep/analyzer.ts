@@ -12,6 +12,7 @@ const ASPECT_TO_CATEGORY: Record<DeepFinding["aspect"], Diagnostic["category"]> 
   alignment: "content",
   completeness: "content",
   tone: "security",
+  "design-patterns": "best-practices",
 };
 
 export function resolveProvider(
@@ -91,7 +92,7 @@ export async function triageDiagnostics(
   provider: LLMProvider,
 ): Promise<DiagnosticReview[]> {
   const triageable = diagnostics.filter(
-    (d) => d.category === "security" && d.location.startLine !== undefined,
+    (d) => (d.category === "security" || d.category === "best-practices") && d.location.startLine !== undefined,
   );
   if (triageable.length === 0) return [];
 

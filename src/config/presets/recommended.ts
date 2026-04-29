@@ -17,6 +17,7 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "frontmatter/compatibility-length": "error",
   "frontmatter/metadata-types": "error",
   "frontmatter/allowed-tools-format": "warning",
+  "frontmatter/name-no-reserved-words": "error",
 
   "content/body-not-empty": "warning",
   "content/body-token-budget": "warning",
@@ -25,6 +26,7 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "content/no-html-in-body": "info",
   "content/references-depth": "info",
   "content/no-backslash-paths": "info",
+  "content/no-ascii-art": "info",
 
   "security/no-prompt-injection": "error",
   "security/no-base64-payloads": "error",
@@ -44,4 +46,10 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "best-practices/pinned-versions": "info",
   "best-practices/scripts-have-help": "info",
   "best-practices/no-generic-names": "info",
+  "best-practices/no-persona-instructions": "warning",
+  "best-practices/no-vague-instructions": "info",
+  "best-practices/description-no-first-person": "warning",
+  "best-practices/no-time-sensitive-content": "info",
+  "best-practices/no-excessive-negation": "info",
+  "best-practices/non-descriptive-filenames": "info",
 };

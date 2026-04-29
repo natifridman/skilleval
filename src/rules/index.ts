@@ -42,6 +42,14 @@ import { gotchasSection } from "./best-practices/gotchas-section.js";
 import { pinnedVersions } from "./best-practices/pinned-versions.js";
 import { scriptsHaveHelp } from "./best-practices/scripts-have-help.js";
 import { noGenericNames } from "./best-practices/no-generic-names.js";
+import { noPersonaInstructions } from "./best-practices/no-persona-instructions.js";
+import { noVagueInstructions } from "./best-practices/no-vague-instructions.js";
+import { descriptionNoFirstPerson } from "./best-practices/description-no-first-person.js";
+import { noTimeSensitiveContent } from "./best-practices/no-time-sensitive-content.js";
+import { noExcessiveNegation } from "./best-practices/no-excessive-negation.js";
+import { nonDescriptiveFilenames } from "./best-practices/non-descriptive-filenames.js";
+import { nameNoReservedWords } from "./frontmatter/name-no-reserved-words.js";
+import { noAsciiArt } from "./content/no-ascii-art.js";
 import { noBackslashPaths } from "./content/no-backslash-paths.js";
 
 const allRules = [
@@ -62,6 +70,7 @@ const allRules = [
   compatibilityLength,
   metadataTypes,
   allowedToolsFormat,
+  nameNoReservedWords,
   // Content
   bodyNotEmpty,
   bodyTokenBudget,
@@ -70,6 +79,7 @@ const allRules = [
   noHtmlInBody,
   referencesDepth,
   noBackslashPaths,
+  noAsciiArt,
   // Security
   noPromptInjection,
   noBase64Payloads,
@@ -89,6 +99,12 @@ const allRules = [
   pinnedVersions,
   scriptsHaveHelp,
   noGenericNames,
+  noPersonaInstructions,
+  noVagueInstructions,
+  descriptionNoFirstPerson,
+  noTimeSensitiveContent,
+  noExcessiveNegation,
+  nonDescriptiveFilenames,
 ];
 
 export function registerAllRules(): void {

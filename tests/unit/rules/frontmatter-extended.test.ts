@@ -7,6 +7,7 @@ import { descriptionQuality } from "../../../src/rules/frontmatter/description-q
 import { compatibilityLength } from "../../../src/rules/frontmatter/compatibility-length.js";
 import { metadataTypes } from "../../../src/rules/frontmatter/metadata-types.js";
 import { allowedToolsFormat } from "../../../src/rules/frontmatter/allowed-tools-format.js";
+import { nameNoReservedWords } from "../../../src/rules/frontmatter/name-no-reserved-words.js";
 
 describe("frontmatter/name-format", () => {
   it("passes for valid lowercase name", async () => {
@@ -212,5 +213,49 @@ describe("frontmatter/allowed-tools-format", () => {
     });
     expect(d).toHaveLength(1);
     expect(d[0].message).toContain("array");
+  });
+});
+
+describe("frontmatter/name-no-reserved-words", () => {
+  it("passes for normal names", async () => {
+    const d = await runRule(nameNoReservedWords, {
+      frontmatter: { name: "pdf-processing" },
+      rawFrontmatter: "name: pdf-processing",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports name containing 'claude'", async () => {
+    const d = await runRule(nameNoReservedWords, {
+      frontmatter: { name: "claude-helper" },
+      rawFrontmatter: "name: claude-helper",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("claude");
+  });
+
+  it("reports name containing 'anthropic'", async () => {
+    const d = await runRule(nameNoReservedWords, {
+      frontmatter: { name: "anthropic-tools" },
+      rawFrontmatter: "name: anthropic-tools",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("anthropic");
+  });
+
+  it("reports name with reserved word as substring", async () => {
+    const d = await runRule(nameNoReservedWords, {
+      frontmatter: { name: "my-claude-skill" },
+      rawFrontmatter: "name: my-claude-skill",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("skips when name is missing", async () => {
+    const d = await runRule(nameNoReservedWords, {
+      frontmatter: { description: "test" },
+      rawFrontmatter: "description: test",
+    });
+    expect(d).toHaveLength(0);
   });
 });

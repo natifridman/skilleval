@@ -13,6 +13,7 @@ interface TestSkillOptions {
   body?: string;
   bodyStartLine?: number;
   parseErrors?: string[];
+  files?: Array<{ path: string; relativePath: string }>;
 }
 
 export function createTestSkill(options: TestSkillOptions = {}): ParsedSkill {
@@ -28,7 +29,7 @@ export function createTestSkill(options: TestSkillOptions = {}): ParsedSkill {
     body: options.body ?? "# Test\n",
     bodyStartLine: options.bodyStartLine ?? 4,
     mdast: { type: "root", children: [] },
-    files: [],
+    files: options.files ?? [],
     parseErrors: options.parseErrors ?? [],
   };
 }
