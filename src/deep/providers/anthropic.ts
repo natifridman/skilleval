@@ -25,7 +25,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await client.messages.create({
       model: this.model,
       max_tokens: 4096,
-      system: systemPrompt,
+      system: [{ type: "text" as const, text: systemPrompt, cache_control: { type: "ephemeral" as const } }],
       messages: [{ role: "user", content: userContent }],
     });
 

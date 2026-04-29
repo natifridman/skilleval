@@ -1,8 +1,8 @@
 import type { LLMProvider } from "./provider.js";
-import type { DeepAnalysisResult, DeepFinding } from "./types.js";
+import type { DeepAnalysisResult, DeepFinding, DiagnosticReview } from "./types.js";
 import type { ParsedSkill } from "../parser/types.js";
 import type { Diagnostic } from "../engine/types.js";
-import { SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
+import { SYSTEM_PROMPT, TRIAGE_SYSTEM_PROMPT, buildUserPrompt, buildTriagePrompt } from "./prompts.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { VertexProvider } from "./providers/vertex.js";
 
@@ -83,6 +83,36 @@ export async function runDeepAnalysis(
     flaggedAsMalicious: parsed.flaggedAsMalicious ?? false,
     tokensUsed: { input: response.inputTokens, output: response.outputTokens },
   };
+}
+
+export async function triageDiagnostics(
+  skill: ParsedSkill,
+  diagnostics: Diagnostic[],
+  provider: LLMProvider,
+): Promise<DiagnosticReview[]> {
+  const triageable = diagnostics.filter(
+    (d) => d.category === "security" && d.location.startLine !== undefined,
+  );
+  if (triageable.length === 0) return [];
+
+  const prompt = buildTriagePrompt(
+    skill.rawContent,
+    triageable.map((d) => ({
+      ruleId: d.ruleId,
+      line: d.location.startLine,
+      message: d.message,
+    })),
+  );
+
+  const response = await provider.analyze(TRIAGE_SYSTEM_PROMPT, prompt);
+
+  try {
+    const cleaned = response.text.replace(/^```json\s*\n?/, "").replace(/\n?```\s*$/, "");
+    const parsed = JSON.parse(cleaned) as { reviews: DiagnosticReview[] };
+    return parsed.reviews ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export function deepFindingsToDiagnostics(

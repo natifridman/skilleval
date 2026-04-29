@@ -35,7 +35,7 @@ export function formatText(results: LintResult[]): string {
   lines.push("");
 
   for (const result of results) {
-    const displayPath = relative(process.cwd(), result.skillPath);
+    const displayPath = result.displayPath ?? relative(process.cwd(), result.skillPath);
     lines.push(pc.underline(displayPath));
     lines.push("");
 

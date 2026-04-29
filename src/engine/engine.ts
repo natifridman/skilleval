@@ -46,6 +46,41 @@ function resolveRuleOptions(
   return [];
 }
 
+const SUPPRESS_RE =
+  /<!--\s*skilleval-disable-next-line(?:\s+([\w/,-]+))?\s*-->/;
+
+function parseSuppressedLines(
+  rawContent: string,
+): Map<number, Set<string> | null> {
+  const suppressed = new Map<number, Set<string> | null>();
+  const lines = rawContent.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(SUPPRESS_RE);
+    if (match) {
+      const targetLine = i + 2;
+      if (match[1]) {
+        const ruleIds = match[1].split(",").map((r) => r.trim());
+        suppressed.set(targetLine, new Set(ruleIds));
+      } else {
+        suppressed.set(targetLine, null);
+      }
+    }
+  }
+  return suppressed;
+}
+
+function isSuppressed(
+  suppressedLines: Map<number, Set<string> | null>,
+  ruleId: string,
+  line?: number,
+): boolean {
+  if (line === undefined) return false;
+  const entry = suppressedLines.get(line);
+  if (entry === undefined) return false;
+  if (entry === null) return true;
+  return entry.has(ruleId);
+}
+
 export async function lint(
   skillPath: string,
   options: EngineOptions = {},
@@ -53,6 +88,7 @@ export async function lint(
   const skill = await parseSkill(skillPath);
   const diagnostics: Diagnostic[] = [];
   const rules = getAllRules();
+  const suppressedLines = parseSuppressedLines(skill.rawContent);
 
   for (const parseError of skill.parseErrors) {
     diagnostics.push({
@@ -75,13 +111,18 @@ export async function lint(
       severity,
       options: ruleOptions,
       report(descriptor: ReportDescriptor) {
+        if (isSuppressed(suppressedLines, rule.meta.id, descriptor.location?.startLine)) {
+          return;
+        }
+
         const template =
           rule.meta.messages[descriptor.messageId] ?? descriptor.messageId;
         const message = interpolateMessage(template, descriptor.data);
+        const effectiveSeverity = descriptor.severityOverride ?? severity;
 
         diagnostics.push({
           ruleId: rule.meta.id,
-          severity,
+          severity: effectiveSeverity,
           message,
           location: {
             file: descriptor.location?.file ?? skill.skillMdPath,

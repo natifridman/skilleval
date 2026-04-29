@@ -27,7 +27,7 @@ export function formatJson(results: LintResult[]): string {
   const output: JsonOutput = {
     version: "0.1.0",
     skills: results.map((r) => ({
-      path: r.skillPath,
+      path: r.displayPath ?? r.skillPath,
       diagnostics: r.diagnostics.map((d) => ({
         ruleId: d.ruleId,
         severity: d.severity,

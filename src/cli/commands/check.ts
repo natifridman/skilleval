@@ -1,3 +1,4 @@
+import { rmSync } from "node:fs";
 import { Command } from "commander";
 import { lint } from "../../engine/engine.js";
 import { registerAllRules } from "../../rules/index.js";
@@ -8,7 +9,9 @@ import {
   resolveProvider,
   runDeepAnalysis,
   deepFindingsToDiagnostics,
+  triageDiagnostics,
 } from "../../deep/index.js";
+import { parseGitHubUrl, fetchRemoteSkills } from "../../github/index.js";
 import type { LintResult } from "../../engine/types.js";
 import { applyFixes } from "../../engine/fixer.js";
 import pc from "picocolors";
@@ -34,35 +37,59 @@ export const checkCommand = new Command("check")
       ? await loadConfig(typeof options.config === "string" ? options.config : undefined)
       : await loadConfig();
 
-    const results: LintResult[] = [];
-    for (const path of paths) {
-      const result = await lint(path, { rules: config.rules });
-
-      if (options.deep) {
-        try {
-          const providerName = options.deepProvider ?? config.deep?.provider;
-          const provider = resolveProvider(providerName, options.deepModel ?? config.deep?.model);
-          const skill = await parseSkill(path);
-          const deepResult = await runDeepAnalysis(skill, provider);
-          const deepDiags = deepFindingsToDiagnostics(
-            deepResult.findings,
-            skill.skillMdPath,
+    const resolvedPaths: string[] = [];
+    const tempDirs: string[] = [];
+    const displayPathMap = new Map<string, string>();
+    for (const p of paths) {
+      const ghRef = parseGitHubUrl(p);
+      if (ghRef) {
+        if (!options.quiet) {
+          console.log(`  Fetching skills from ${ghRef.owner}/${ghRef.repo}...`);
+        }
+        const fetchResult = await fetchRemoteSkills(ghRef);
+        tempDirs.push(fetchResult.tempDir);
+        for (const skill of fetchResult.skills) {
+          resolvedPaths.push(skill.localPath);
+          displayPathMap.set(
+            skill.localPath,
+            `${ghRef.owner}/${ghRef.repo}:${skill.remotePath}`,
           );
+        }
+      } else {
+        resolvedPaths.push(p);
+      }
+    }
 
-          result.diagnostics.push(...deepDiags);
-          result.errorCount += deepDiags.filter((d) => d.severity === "error").length;
-          result.warningCount += deepDiags.filter((d) => d.severity === "warning").length;
-          result.infoCount += deepDiags.filter((d) => d.severity === "info").length;
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (!options.quiet) {
-            console.error(`\n  Deep analysis failed: ${msg}\n`);
+    const lintResults = await Promise.all(
+      resolvedPaths.map(async (path) => {
+        const result = await lint(path, { rules: config.rules });
+        const ghDisplayPath = displayPathMap.get(path);
+        if (ghDisplayPath) {
+          result.displayPath = ghDisplayPath;
+          for (const diag of result.diagnostics) {
+            diag.location.file = diag.location.file.replace(path, ghDisplayPath);
           }
         }
-      }
+        return { path, result };
+      }),
+    );
 
-      results.push(result);
+    if (options.deep) {
+      const providerName = options.deepProvider ?? config.deep?.provider;
+      const provider = resolveProvider(providerName, options.deepModel ?? config.deep?.model);
+
+      const DEEP_CONCURRENCY = 5;
+      for (let i = 0; i < lintResults.length; i += DEEP_CONCURRENCY) {
+        const batch = lintResults.slice(i, i + DEEP_CONCURRENCY);
+        await Promise.all(
+          batch.map(({ path, result }) =>
+            runDeepForSkill(path, result, provider, options.quiet),
+          ),
+        );
+      }
     }
+
+    const results = lintResults.map(({ result }) => result);
 
     if (options.fix) {
       for (const result of results) {
@@ -80,6 +107,10 @@ export const checkCommand = new Command("check")
       process.stdout.write(output);
     }
 
+    for (const dir of new Set(tempDirs)) {
+      rmSync(dir, { recursive: true, force: true });
+    }
+
     const hasErrors = results.some((r) => r.errorCount > 0);
     const hasWarnings = results.some((r) => r.warningCount > 0);
 
@@ -89,6 +120,63 @@ export const checkCommand = new Command("check")
       process.exitCode = 2;
     }
   });
+
+async function runDeepForSkill(
+  path: string,
+  result: LintResult,
+  provider: import("../../deep/provider.js").LLMProvider,
+  quiet?: boolean,
+): Promise<void> {
+  try {
+    const skill = await parseSkill(path);
+    const deepResult = await runDeepAnalysis(skill, provider);
+    const deepDiags = deepFindingsToDiagnostics(
+      deepResult.findings,
+      skill.skillMdPath,
+    );
+
+    result.diagnostics.push(...deepDiags);
+
+    const hasSecurityFindings = result.diagnostics.some(
+      (d) => d.category === "security" && d.location.startLine !== undefined,
+    );
+    if (hasSecurityFindings) {
+      const reviews = await triageDiagnostics(skill, result.diagnostics, provider);
+      const dismissed = new Set(
+        reviews
+          .filter((r) => r.dismiss)
+          .map((r) => `${r.ruleId}:${r.line}`),
+      );
+
+      if (dismissed.size > 0) {
+        result.diagnostics = result.diagnostics.filter((d) => {
+          const key = `${d.ruleId}:${d.location.startLine}`;
+          if (dismissed.has(key)) {
+            if (!quiet) {
+              const review = reviews.find(
+                (r) => r.dismiss && `${r.ruleId}:${r.line}` === key,
+              );
+              console.log(
+                `  ${pc.green("Dismissed")}  ${d.ruleId} at line ${d.location.startLine}: ${review?.reason ?? "LLM triage"}`,
+              );
+            }
+            return false;
+          }
+          return true;
+        });
+      }
+    }
+
+    result.errorCount = result.diagnostics.filter((d) => d.severity === "error").length;
+    result.warningCount = result.diagnostics.filter((d) => d.severity === "warning").length;
+    result.infoCount = result.diagnostics.filter((d) => d.severity === "info").length;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!quiet) {
+      console.error(`\n  Deep analysis failed: ${msg}\n`);
+    }
+  }
+}
 
 function collect(value: string, previous: string[]): string[] {
   return previous.concat([value]);

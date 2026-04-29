@@ -14,3 +14,10 @@ export interface DeepAnalysisResult {
   flaggedAsMalicious: boolean;
   tokensUsed: { input: number; output: number };
 }
+
+export interface DiagnosticReview {
+  ruleId: string;
+  line: number;
+  dismiss: boolean;
+  reason: string;
+}

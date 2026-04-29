@@ -44,6 +44,7 @@ export interface ReportDescriptor {
   data?: Record<string, string | number>;
   location?: Partial<DiagnosticLocation>;
   fix?: DiagnosticFix;
+  severityOverride?: Severity;
 }
 
 export interface RuleContext {
@@ -60,6 +61,7 @@ export interface Rule {
 
 export interface LintResult {
   skillPath: string;
+  displayPath?: string;
   diagnostics: Diagnostic[];
   errorCount: number;
   warningCount: number;

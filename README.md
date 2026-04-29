@@ -25,6 +25,13 @@ skilleval check ./my-skill
 # Lint multiple skills
 skilleval check ./skill-a ./skill-b
 
+# Lint skills from a GitHub repo
+skilleval check https://github.com/org/repo
+skilleval check github:org/repo
+
+# Target a specific skill in a repo
+skilleval check https://github.com/org/repo/tree/main/skills/my-skill
+
 # Scaffold a new skill
 skilleval new my-new-skill
 
@@ -47,6 +54,11 @@ skilleval check ./my-skill --strict
 skilleval check ./my-skill --fix
 skilleval check ./my-skill --deep
 skilleval check ./my-skill --deep --deep-provider vertex
+
+# Remote GitHub repos
+skilleval check https://github.com/org/repo
+skilleval check https://github.com/org/repo/tree/main/skills/my-skill
+skilleval check github:org/repo
 ```
 
 | Flag | Description |
@@ -123,7 +135,7 @@ Based on [Snyk ToxicSkills](https://snyk.io/blog/toxicskills-malicious-ai-agent-
 
 | Rule | Severity | Description |
 |------|----------|-------------|
-| `security/no-prompt-injection` | error | Detects prompt injection patterns |
+| `security/no-prompt-injection` | error | Detects prompt injection patterns (context-aware: patterns in quotes, backticks, or code blocks are downgraded to warnings) |
 | `security/no-base64-payloads` | error | Detects obfuscated base64 content |
 | `security/no-credential-access` | error | Detects sensitive file/env access |
 | `security/no-curl-bash` | error | Detects pipe-to-shell execution |
@@ -170,6 +182,30 @@ Config is discovered via [lilconfig](https://github.com/antonk52/lilconfig): `.s
 | `strict` | Recommended + best practices elevated to warnings |
 | `security` | Security rules only, all as errors |
 
+## Inline Suppression
+
+Suppress specific findings with HTML comments in your SKILL.md:
+
+```markdown
+<!-- skilleval-disable-next-line -->
+This line's diagnostics are suppressed.
+
+<!-- skilleval-disable-next-line security/no-prompt-injection -->
+Only the specified rule is suppressed on the next line.
+```
+
+## Remote GitHub Scanning
+
+Pass a GitHub URL instead of a local path to scan skills hosted on GitHub:
+
+```bash
+skilleval check https://github.com/org/repo
+skilleval check https://github.com/org/repo/tree/main/skills/my-skill
+skilleval check github:org/repo
+```
+
+Authentication uses `gh` CLI (if installed and logged in) with a fallback to the `GITHUB_TOKEN` environment variable. Public repos work without authentication.
+
 ## Deep Analysis (`--deep`)
 
 Optional LLM-powered semantic analysis that catches issues regex can't:
@@ -179,6 +215,8 @@ Optional LLM-powered semantic analysis that catches issues regex can't:
 - Description-body misalignment
 - System message impersonation
 - Script safety issues
+
+When `--deep` is enabled, the LLM also triages static security findings and dismisses confirmed false positives (e.g., injection patterns that appear in documentation or examples). Dismissed findings are removed from the output with an explanation.
 
 ### Setup
 

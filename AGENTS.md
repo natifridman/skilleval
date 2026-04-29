@@ -31,10 +31,11 @@ src/
 ├── cli/commands/       # check, rules, init, new
 ├── config/             # lilconfig loader + presets (recommended, strict, security)
 │   └── presets/
-├── deep/               # LLM-powered analysis (--deep flag)
+├── deep/               # LLM-powered analysis + triage (--deep flag)
 │   └── providers/      # Anthropic API + Vertex AI
-├── engine/             # Core lint loop, rule registry, fixer
+├── engine/             # Core lint loop, rule registry, fixer, inline suppression
 ├── formatters/         # text, JSON, SARIF, GitHub annotations
+├── github/             # Remote GitHub repo scanning (URL parsing, API client, skill fetching)
 ├── parser/             # gray-matter + remark → ParsedSkill
 ├── rules/              # 37 rules in 5 categories
 │   ├── structural/
@@ -154,6 +155,16 @@ Create test skill directories in `tests/fixtures/` for integration tests.
 
 The `--format` flag controls output: `text` (default terminal), `json` (structured), `sarif` (GitHub Code Scanning), `github` (::error/::warning annotations). Formatters are in `src/formatters/`.
 
+## Inline suppression
+
+The engine (`src/engine/engine.ts`) supports `<!-- skilleval-disable-next-line [rule-id] -->` HTML comments in SKILL.md. Suppressed lines are parsed before rules run and filtered in the `report()` callback — transparent to rules.
+
+## Remote GitHub scanning
+
+The `src/github/` module fetches skills from GitHub repos via the Git Trees API (one request for full file tree) and Contents API (file downloads). Uses `gh` CLI when available, falls back to `fetch` + `GITHUB_TOKEN`. Skills are downloaded to OS temp dirs, passed through the normal lint pipeline, then cleaned up. The `check` command maps temp paths to display paths like `owner/repo:path/to/skill`.
+
 ## Deep analysis
 
 The `--deep` flag sends skill content to Claude for semantic analysis. Provider SDKs (`@anthropic-ai/sdk`, `@anthropic-ai/vertex-sdk`) are optional peer dependencies — dynamically imported at runtime. The provider abstraction is in `src/deep/provider.ts`.
+
+After static linting, `--deep` also triages security findings via a second LLM pass (`src/deep/analyzer.ts:triageDiagnostics`). The LLM reviews each flagged diagnostic against the skill content and dismisses confirmed false positives (e.g., injection patterns mentioned as examples in documentation).

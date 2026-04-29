@@ -93,7 +93,7 @@ export async function runRule(
       const message = interpolateMessage(template, descriptor.data);
       diagnostics.push({
         ruleId: rule.meta.id,
-        severity: context.severity,
+        severity: descriptor.severityOverride ?? context.severity,
         message,
         location: {
           file: descriptor.location?.file ?? skill.skillMdPath,

@@ -24,10 +24,11 @@ npx tsc --noEmit       # Type check without emitting
 npm run dev            # Watch mode (rebuild on change)
 ```
 
-Run the linter locally against a skill directory:
+Run the linter locally against a skill directory or GitHub repo:
 
 ```bash
 node bin/skilleval.js check path/to/skill
+node bin/skilleval.js check https://github.com/org/repo
 ```
 
 ## Adding a new rule
@@ -85,6 +86,8 @@ For integration tests, add skill directories to `tests/fixtures/`.
 - [ ] New rule is registered in `src/rules/index.ts`
 - [ ] New rule is added to all three presets
 - [ ] Tests cover both positive (detects issue) and negative (passes clean input) cases
+- [ ] Security rules: test both context-aware scenarios (pattern in prose vs. in quotes/code blocks)
+- [ ] Test that `<!-- skilleval-disable-next-line rule-id -->` suppresses the rule
 - [ ] No unrelated changes
 
 ## Code style
