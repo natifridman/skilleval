@@ -10,4 +10,6 @@ export const strict: Record<string, RuleSeverityConfig> = {
   "best-practices/gotchas-section": "warning",
   "best-practices/pinned-versions": "warning",
   "best-practices/scripts-have-help": "warning",
+  "best-practices/no-generic-names": "warning",
+  "content/no-backslash-paths": "warning",
 };

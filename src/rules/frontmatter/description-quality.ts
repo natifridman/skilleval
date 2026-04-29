@@ -11,6 +11,13 @@ const GENERIC_PATTERNS = [
   /^todo/i,
   /^placeholder/i,
   /^test$/i,
+  /^just /i,
+  /^simply /i,
+  /^handles? /i,
+  /^manages? /i,
+  /^process /i,
+  /^do /i,
+  /^the /i,
 ];
 
 export const descriptionQuality: Rule = {

@@ -24,6 +24,7 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "content/has-headings": "info",
   "content/no-html-in-body": "info",
   "content/references-depth": "info",
+  "content/no-backslash-paths": "info",
 
   "security/no-prompt-injection": "error",
   "security/no-base64-payloads": "error",
@@ -42,4 +43,5 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "best-practices/gotchas-section": "info",
   "best-practices/pinned-versions": "info",
   "best-practices/scripts-have-help": "info",
+  "best-practices/no-generic-names": "info",
 };

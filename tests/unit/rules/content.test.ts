@@ -4,6 +4,7 @@ import { bodyNotEmpty } from "../../../src/rules/content/body-not-empty.js";
 import { bodyTokenBudget } from "../../../src/rules/content/body-token-budget.js";
 import { bodyLineLimit } from "../../../src/rules/content/body-line-limit.js";
 import { hasHeadings } from "../../../src/rules/content/has-headings.js";
+import { noBackslashPaths } from "../../../src/rules/content/no-backslash-paths.js";
 
 describe("content/body-not-empty", () => {
   it("passes for non-empty body", async () => {
@@ -61,5 +62,37 @@ describe("content/has-headings", () => {
     // mdast in test helper is empty, so this will report
     // We test the real parser integration via CLI tests
     expect(d).toHaveLength(1);
+  });
+});
+
+describe("content/no-backslash-paths", () => {
+  it("passes for forward-slash paths", async () => {
+    const d = await runRule(noBackslashPaths, {
+      body: "Run `scripts/helper.py` to validate.",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports backslash paths", async () => {
+    const d = await runRule(noBackslashPaths, {
+      body: "Run `scripts\\helper.py` to validate.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("forward slashes");
+  });
+
+  it("detects references backslash path", async () => {
+    const d = await runRule(noBackslashPaths, {
+      body: "See references\\guide.md for details.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("references\\guide.md");
+  });
+
+  it("passes for clean content", async () => {
+    const d = await runRule(noBackslashPaths, {
+      body: "# My Skill\nThis skill does things.",
+    });
+    expect(d).toHaveLength(0);
   });
 });

@@ -24,6 +24,7 @@ export const security: Record<string, RuleSeverityConfig> = {
   "content/has-headings": "off",
   "content/no-html-in-body": "off",
   "content/references-depth": "off",
+  "content/no-backslash-paths": "off",
 
   "security/no-prompt-injection": "error",
   "security/no-base64-payloads": "error",
@@ -42,4 +43,5 @@ export const security: Record<string, RuleSeverityConfig> = {
   "best-practices/gotchas-section": "off",
   "best-practices/pinned-versions": "off",
   "best-practices/scripts-have-help": "off",
+  "best-practices/no-generic-names": "off",
 };

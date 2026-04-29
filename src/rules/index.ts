@@ -41,6 +41,8 @@ import { hasExamples } from "./best-practices/has-examples.js";
 import { gotchasSection } from "./best-practices/gotchas-section.js";
 import { pinnedVersions } from "./best-practices/pinned-versions.js";
 import { scriptsHaveHelp } from "./best-practices/scripts-have-help.js";
+import { noGenericNames } from "./best-practices/no-generic-names.js";
+import { noBackslashPaths } from "./content/no-backslash-paths.js";
 
 const allRules = [
   // Structural
@@ -67,6 +69,7 @@ const allRules = [
   hasHeadings,
   noHtmlInBody,
   referencesDepth,
+  noBackslashPaths,
   // Security
   noPromptInjection,
   noBase64Payloads,
@@ -85,6 +88,7 @@ const allRules = [
   gotchasSection,
   pinnedVersions,
   scriptsHaveHelp,
+  noGenericNames,
 ];
 
 export function registerAllRules(): void {

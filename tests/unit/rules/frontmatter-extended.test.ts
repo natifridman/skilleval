@@ -124,6 +124,30 @@ describe("frontmatter/description-quality", () => {
     });
     expect(d.some((x) => x.message.includes("generic"))).toBe(true);
   });
+
+  it("reports 'just' pattern", async () => {
+    const d = await runRule(descriptionQuality, {
+      frontmatter: { description: "Just does some things with files in the repo" },
+      rawFrontmatter: "description: Just does some things with files in the repo",
+    });
+    expect(d.some((x) => x.message.includes("generic"))).toBe(true);
+  });
+
+  it("reports 'handles' pattern", async () => {
+    const d = await runRule(descriptionQuality, {
+      frontmatter: { description: "Handles documents and other resources" },
+      rawFrontmatter: "description: Handles documents and other resources",
+    });
+    expect(d.some((x) => x.message.includes("generic"))).toBe(true);
+  });
+
+  it("reports 'manages' pattern", async () => {
+    const d = await runRule(descriptionQuality, {
+      frontmatter: { description: "Manages files in the project directory" },
+      rawFrontmatter: "description: Manages files in the project directory",
+    });
+    expect(d.some((x) => x.message.includes("generic"))).toBe(true);
+  });
 });
 
 describe("frontmatter/compatibility-length", () => {

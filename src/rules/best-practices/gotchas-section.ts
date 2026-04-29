@@ -1,7 +1,7 @@
 import type { Rule } from "../../engine/types.js";
 import { estimateTokens } from "../../utils/token-counter.js";
 
-const GOTCHA_HEADINGS = /^#+\s*(gotchas?|caveats?|warnings?|pitfalls?|known\s+issues?|important\s+notes?|watch\s+out)/im;
+const GOTCHA_HEADINGS = /^#+\s*(gotchas?|caveats?|warnings?|pitfalls?|known\s+issues?|important\s+notes?|watch\s+out|troubleshooting|error\s+handling)/im;
 const MIN_TOKENS_FOR_GOTCHAS = 1000;
 
 export const gotchasSection: Rule = {

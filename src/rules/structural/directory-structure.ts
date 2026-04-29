@@ -2,7 +2,7 @@ import { readdirSync, statSync } from "node:fs";
 import { join, basename } from "node:path";
 import type { Rule } from "../../engine/types.js";
 
-const KNOWN_DIRS = new Set(["scripts", "references", "assets", "evals"]);
+const KNOWN_DIRS = new Set(["scripts", "references", "assets", "evals", "prompts"]);
 
 export const directoryStructure: Rule = {
   meta: {

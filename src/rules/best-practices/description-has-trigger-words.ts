@@ -2,12 +2,15 @@ import type { Rule } from "../../engine/types.js";
 import { findFieldLine } from "../../parser/frontmatter.js";
 
 const TRIGGER_PATTERNS = [
-  /\buse\s+(this\s+)?(skill\s+)?when\b/i,
-  /\binvoke\s+(this\s+)?(skill\s+)?when\b/i,
-  /\brun\s+(this\s+)?when\b/i,
-  /\bactivate\s+when\b/i,
+  /\buse\s+(this\s+)?(skill\s+)?when(ever)?\b/i,
+  /\binvoke\s+(this\s+)?(skill\s+)?when(ever)?\b/i,
+  /\brun\s+(this\s+)?when(ever)?\b/i,
+  /\bactivate\s+when(ever)?\b/i,
   /\buse\s+(this\s+)?(skill\s+)?to\b/i,
   /\buse\s+(this\s+)?(skill\s+)?for\b/i,
+  /\buse\s+(this\s+)?(skill\s+)?after\b/i,
+  /\buse\s+(this\s+)?(skill\s+)?before\b/i,
+  /\buse\s+(this\s+)?(skill\s+)?during\b/i,
 ];
 
 export const descriptionHasTriggerWords: Rule = {

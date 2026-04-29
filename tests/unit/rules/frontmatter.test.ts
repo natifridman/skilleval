@@ -105,4 +105,39 @@ describe("frontmatter/no-extra-fields", () => {
     expect(diagnostics[0].message).toContain("version");
     expect(diagnostics[1].message).toContain("author");
   });
+
+  it("downgrades extension fields to info", async () => {
+    const diagnostics = await runRule(noExtraFields, {
+      frontmatter: {
+        name: "test",
+        description: "d",
+        "user-invocable": true,
+        "argument-hint": "[file]",
+        model: "claude-sonnet-4-5",
+        effort: "medium",
+      } as any,
+      rawFrontmatter:
+        "name: test\ndescription: d\nuser-invocable: true\nargument-hint: '[file]'\nmodel: claude-sonnet-4-5\neffort: medium",
+    });
+    expect(diagnostics).toHaveLength(4);
+    expect(diagnostics.every((d) => d.severity === "info")).toBe(true);
+    expect(diagnostics.every((d) => d.message.includes("client extension"))).toBe(true);
+  });
+
+  it("still errors on truly unknown fields alongside extensions", async () => {
+    const diagnostics = await runRule(noExtraFields, {
+      frontmatter: {
+        name: "test",
+        description: "d",
+        "user-invocable": true,
+        bogus: "bad",
+      } as any,
+      rawFrontmatter: "name: test\ndescription: d\nuser-invocable: true\nbogus: bad",
+    });
+    const infos = diagnostics.filter((d) => d.severity === "info");
+    const errors = diagnostics.filter((d) => d.severity === "error");
+    expect(infos).toHaveLength(1);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain("bogus");
+  });
 });

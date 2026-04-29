@@ -4,12 +4,29 @@ import { descriptionHasTriggerWords } from "../../../src/rules/best-practices/de
 import { hasExamples } from "../../../src/rules/best-practices/has-examples.js";
 import { gotchasSection } from "../../../src/rules/best-practices/gotchas-section.js";
 import { pinnedVersions } from "../../../src/rules/best-practices/pinned-versions.js";
+import { noGenericNames } from "../../../src/rules/best-practices/no-generic-names.js";
 
 describe("best-practices/description-has-trigger-words", () => {
   it("passes with trigger phrasing", async () => {
     const d = await runRule(descriptionHasTriggerWords, {
       frontmatter: { description: "Use this skill when deploying to production" },
       rawFrontmatter: "description: Use this skill when deploying to production",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes with 'use after' trigger phrasing", async () => {
+    const d = await runRule(descriptionHasTriggerWords, {
+      frontmatter: { description: "Score and rank backport candidates. Use after the agent completes semantic analysis." },
+      rawFrontmatter: "description: Score and rank backport candidates. Use after the agent completes semantic analysis.",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes with 'use this skill whenever' phrasing", async () => {
+    const d = await runRule(descriptionHasTriggerWords, {
+      frontmatter: { description: "Use this skill whenever the user asks to review an ADR" },
+      rawFrontmatter: "description: Use this skill whenever the user asks to review an ADR",
     });
     expect(d).toHaveLength(0);
   });
@@ -50,6 +67,18 @@ describe("best-practices/gotchas-section", () => {
     const d = await runRule(gotchasSection, { body });
     expect(d).toHaveLength(0);
   });
+
+  it("passes when troubleshooting heading exists", async () => {
+    const body = "word ".repeat(1200) + "\n## Troubleshooting\n\n- If X fails, try Y";
+    const d = await runRule(gotchasSection, { body });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes when error handling heading exists", async () => {
+    const body = "word ".repeat(1200) + "\n## Error Handling\n\n- If X fails, check Y";
+    const d = await runRule(gotchasSection, { body });
+    expect(d).toHaveLength(0);
+  });
 });
 
 describe("best-practices/pinned-versions", () => {
@@ -66,5 +95,50 @@ describe("best-practices/pinned-versions", () => {
     });
     expect(d.length).toBeGreaterThan(0);
     expect(d[0].message).toContain("npx");
+  });
+});
+
+describe("best-practices/no-generic-names", () => {
+  it("passes for domain-specific names", async () => {
+    const d = await runRule(noGenericNames, {
+      frontmatter: { name: "pdf-processing" },
+      rawFrontmatter: "name: pdf-processing",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports generic name 'utils'", async () => {
+    const d = await runRule(noGenericNames, {
+      frontmatter: { name: "utils" },
+      rawFrontmatter: "name: utils",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("generic");
+  });
+
+  it("reports generic name 'helper'", async () => {
+    const d = await runRule(noGenericNames, {
+      frontmatter: { name: "helper" },
+      rawFrontmatter: "name: helper",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("generic");
+  });
+
+  it("reports generic name 'tools'", async () => {
+    const d = await runRule(noGenericNames, {
+      frontmatter: { name: "tools" },
+      rawFrontmatter: "name: tools",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("generic");
+  });
+
+  it("skips when name is missing", async () => {
+    const d = await runRule(noGenericNames, {
+      frontmatter: { description: "test" },
+      rawFrontmatter: "description: test",
+    });
+    expect(d).toHaveLength(0);
   });
 });
