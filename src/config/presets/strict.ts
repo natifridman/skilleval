@@ -13,6 +13,8 @@ export const strict: Record<string, RuleSeverityConfig> = {
   "best-practices/no-generic-names": "warning",
   "content/no-backslash-paths": "warning",
   "content/no-ascii-art": "warning",
+  "content/no-duplicate-headings": "warning",
+  "frontmatter/license-format": "warning",
   "best-practices/no-vague-instructions": "warning",
   "best-practices/no-time-sensitive-content": "warning",
   "best-practices/no-excessive-negation": "warning",

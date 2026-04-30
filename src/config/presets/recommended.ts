@@ -18,6 +18,7 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "frontmatter/metadata-types": "error",
   "frontmatter/allowed-tools-format": "warning",
   "frontmatter/name-no-reserved-words": "error",
+  "frontmatter/license-format": "info",
 
   "content/body-not-empty": "warning",
   "content/body-token-budget": "warning",
@@ -27,6 +28,7 @@ export const recommended: Record<string, RuleSeverityConfig> = {
   "content/references-depth": "info",
   "content/no-backslash-paths": "info",
   "content/no-ascii-art": "info",
+  "content/no-duplicate-headings": "info",
 
   "security/no-prompt-injection": "error",
   "security/no-base64-payloads": "error",

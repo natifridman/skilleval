@@ -8,6 +8,7 @@ import { noBackslashPaths } from "../../../src/rules/content/no-backslash-paths.
 import { noAsciiArt } from "../../../src/rules/content/no-ascii-art.js";
 import { noHtmlInBody } from "../../../src/rules/content/no-html-in-body.js";
 import { referencesDepth } from "../../../src/rules/content/references-depth.js";
+import { noDuplicateHeadings } from "../../../src/rules/content/no-duplicate-headings.js";
 
 describe("content/body-not-empty", () => {
   it("passes for non-empty body", async () => {
@@ -195,5 +196,63 @@ describe("content/references-depth", () => {
   it("passes when no files exist", async () => {
     const d = await runRule(referencesDepth, { files: [] });
     expect(d).toHaveLength(0);
+  });
+});
+
+describe("content/no-duplicate-headings", () => {
+  it("passes for unique headings", async () => {
+    const d = await runRule(noDuplicateHeadings, {
+      body: "# Setup\n\nContent.\n\n## Configuration\n\nMore content.\n\n## Deployment\n\nFinal.",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports duplicate headings", async () => {
+    const d = await runRule(noDuplicateHeadings, {
+      body: "# Setup\n\nContent.\n\n## Setup\n\nDuplicate heading.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("Setup");
+  });
+
+  it("detects case-insensitive duplicates", async () => {
+    const d = await runRule(noDuplicateHeadings, {
+      body: "# Configuration\n\nContent.\n\n## configuration\n\nDuplicate.",
+    });
+    expect(d).toHaveLength(1);
+  });
+
+  it("passes for empty body", async () => {
+    const d = await runRule(noDuplicateHeadings, {
+      body: "  ",
+    });
+    expect(d).toHaveLength(0);
+  });
+});
+
+describe("content/no-backslash-paths (fixable)", () => {
+  it("provides a fix with forward slashes", async () => {
+    const d = await runRule(noBackslashPaths, {
+      body: "Run `scripts\\helper.py` to validate.",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].fix).toBeDefined();
+    expect(d[0].fix!.replacement).toContain("scripts/helper.py");
+    expect(d[0].fix!.replacement).not.toContain("\\");
+  });
+});
+
+describe("frontmatter/frontmatter-present (fixable)", () => {
+  // Import inline to avoid circular issues with existing tests
+  it("provides a fix with frontmatter template", async () => {
+    const { frontmatterPresent } = await import("../../../src/rules/frontmatter/frontmatter-present.js");
+    const d = await runRule(frontmatterPresent, {
+      rawContent: "# No frontmatter here\nJust content.",
+      dirName: "my-skill",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].fix).toBeDefined();
+    expect(d[0].fix!.replacement).toContain("---");
+    expect(d[0].fix!.replacement).toContain("name: my-skill");
   });
 });

@@ -46,25 +46,81 @@ function resolveRuleOptions(
   return [];
 }
 
-const SUPPRESS_RE =
+const SUPPRESS_NEXT_LINE_RE =
   /<!--\s*skilleval-disable-next-line(?:\s+([\w/,-]+))?\s*-->/;
+const SUPPRESS_DISABLE_RE =
+  /<!--\s*skilleval-disable(?:\s+([\w/,-]+))?\s*-->/;
+const SUPPRESS_ENABLE_RE =
+  /<!--\s*skilleval-enable(?:\s+([\w/,-]+))?\s*-->/;
+
+function parseRuleIds(raw: string | undefined): Set<string> | null {
+  if (!raw) return null;
+  return new Set(raw.split(",").map((r) => r.trim()));
+}
 
 function parseSuppressedLines(
   lines: string[],
 ): Map<number, Set<string> | null> {
   const suppressed = new Map<number, Set<string> | null>();
+
+  // Track active disable ranges: null means all rules, Set means specific rules
+  let activeRanges: Array<Set<string> | null> = [];
+
   for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(SUPPRESS_RE);
-    if (match) {
+    // Check disable-next-line
+    const nextLineMatch = lines[i].match(SUPPRESS_NEXT_LINE_RE);
+    if (nextLineMatch) {
       const targetLine = i + 2;
-      if (match[1]) {
-        const ruleIds = match[1].split(",").map((r) => r.trim());
-        suppressed.set(targetLine, new Set(ruleIds));
+      const ruleIds = parseRuleIds(nextLineMatch[1]);
+      suppressed.set(targetLine, ruleIds);
+      continue;
+    }
+
+    // Check range disable
+    const disableMatch = lines[i].match(SUPPRESS_DISABLE_RE);
+    if (disableMatch) {
+      activeRanges.push(parseRuleIds(disableMatch[1]));
+      continue;
+    }
+
+    // Check range enable
+    const enableMatch = lines[i].match(SUPPRESS_ENABLE_RE);
+    if (enableMatch) {
+      const enabledRules = parseRuleIds(enableMatch[1]);
+      if (enabledRules === null) {
+        // <!-- skilleval-enable --> clears all ranges
+        activeRanges = [];
       } else {
-        suppressed.set(targetLine, null);
+        // Remove specific rules from active ranges
+        activeRanges = activeRanges.filter((range) => {
+          if (range === null) return true;
+          for (const ruleId of enabledRules) range.delete(ruleId);
+          return range.size > 0;
+        });
+      }
+      continue;
+    }
+
+    // Apply active ranges to this line (1-indexed)
+    if (activeRanges.length > 0) {
+      const lineNum = i + 1;
+      const existing = suppressed.get(lineNum);
+      for (const range of activeRanges) {
+        if (range === null) {
+          suppressed.set(lineNum, null);
+          break;
+        } else if (existing === null) {
+          // Already suppressing all
+          break;
+        } else if (existing) {
+          for (const r of range) existing.add(r);
+        } else {
+          suppressed.set(lineNum, new Set(range));
+        }
       }
     }
   }
+
   return suppressed;
 }
 

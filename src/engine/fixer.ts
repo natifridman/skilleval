@@ -30,18 +30,32 @@ export function applyFixes(diagnostics: Diagnostic[]): FixResult[] {
     let modified = content;
     const applied: string[] = [];
 
-    for (const d of diags) {
-      if (!d.fix?.replacement) continue;
+    // Sort by line number descending so replacements don't shift subsequent line indices
+    const sorted = [...diags].sort(
+      (a, b) => (b.location.startLine ?? 0) - (a.location.startLine ?? 0),
+    );
 
-      if (d.ruleId === "frontmatter/name-format" && d.location.startLine) {
-        const lines = modified.split("\n");
-        const lineIdx = d.location.startLine - 1;
-        if (lineIdx < lines.length && lines[lineIdx].startsWith("name:")) {
-          const currentName = lines[lineIdx].replace(/^name:\s*/, "").trim();
+    for (const d of sorted) {
+      if (!d.fix?.replacement || !d.location.startLine) continue;
+
+      const lines = modified.split("\n");
+      const lineIdx = d.location.startLine - 1;
+      if (lineIdx >= lines.length) continue;
+
+      if (d.ruleId === "frontmatter/name-format") {
+        if (lines[lineIdx].startsWith("name:")) {
           lines[lineIdx] = `name: ${d.fix.replacement}`;
           modified = lines.join("\n");
           applied.push(d.ruleId);
         }
+      } else if (d.ruleId === "content/no-backslash-paths") {
+        lines[lineIdx] = d.fix.replacement;
+        modified = lines.join("\n");
+        applied.push(d.ruleId);
+      } else if (d.ruleId === "frontmatter/frontmatter-present") {
+        // Prepend frontmatter at the top of the file
+        modified = d.fix.replacement + modified;
+        applied.push(d.ruleId);
       }
     }
 

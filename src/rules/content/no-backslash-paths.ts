@@ -7,7 +7,7 @@ export const noBackslashPaths: Rule = {
     id: "content/no-backslash-paths",
     type: "suggestion",
     defaultSeverity: "info",
-    fixable: false,
+    fixable: true,
     description:
       "File paths should use forward slashes for cross-platform compatibility",
     category: "content",
@@ -24,10 +24,15 @@ export const noBackslashPaths: Rule = {
     for (let i = 0; i < lines.length; i++) {
       const match = BACKSLASH_PATH.exec(lines[i]);
       if (match) {
+        const fixedLine = lines[i].replace(/\\/g, "/");
         context.report({
           messageId: "backslash",
           data: { path: match[0], line: String(skill.bodyStartLine + i) },
           location: { startLine: skill.bodyStartLine + i },
+          fix: {
+            description: "Replace backslashes with forward slashes",
+            replacement: fixedLine,
+          },
         });
       }
     }

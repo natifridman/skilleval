@@ -8,6 +8,7 @@ import { compatibilityLength } from "../../../src/rules/frontmatter/compatibilit
 import { metadataTypes } from "../../../src/rules/frontmatter/metadata-types.js";
 import { allowedToolsFormat } from "../../../src/rules/frontmatter/allowed-tools-format.js";
 import { nameNoReservedWords } from "../../../src/rules/frontmatter/name-no-reserved-words.js";
+import { licenseFormat } from "../../../src/rules/frontmatter/license-format.js";
 
 describe("frontmatter/name-format", () => {
   it("passes for valid lowercase name", async () => {
@@ -255,6 +256,49 @@ describe("frontmatter/name-no-reserved-words", () => {
     const d = await runRule(nameNoReservedWords, {
       frontmatter: { description: "test" },
       rawFrontmatter: "description: test",
+    });
+    expect(d).toHaveLength(0);
+  });
+});
+
+describe("frontmatter/license-format", () => {
+  it("passes for SPDX identifiers", async () => {
+    const d = await runRule(licenseFormat, {
+      frontmatter: { name: "test", description: "test", license: "MIT" },
+      rawFrontmatter: "name: test\ndescription: test\nlicense: MIT",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes for Apache-2.0", async () => {
+    const d = await runRule(licenseFormat, {
+      frontmatter: { name: "test", description: "test", license: "Apache-2.0" },
+      rawFrontmatter: "name: test\ndescription: test\nlicense: Apache-2.0",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("passes for license file references", async () => {
+    const d = await runRule(licenseFormat, {
+      frontmatter: { name: "test", description: "test", license: "Proprietary. LICENSE.txt has complete terms" },
+      rawFrontmatter: "name: test\ndescription: test\nlicense: Proprietary. LICENSE.txt has complete terms",
+    });
+    expect(d).toHaveLength(0);
+  });
+
+  it("reports unrecognized license strings", async () => {
+    const d = await runRule(licenseFormat, {
+      frontmatter: { name: "test", description: "test", license: "custom-thing" },
+      rawFrontmatter: "name: test\ndescription: test\nlicense: custom-thing",
+    });
+    expect(d).toHaveLength(1);
+    expect(d[0].message).toContain("custom-thing");
+    expect(d[0].message).toContain("SPDX");
+  });
+
+  it("skips when license is absent", async () => {
+    const d = await runRule(licenseFormat, {
+      frontmatter: { name: "test", description: "test" },
     });
     expect(d).toHaveLength(0);
   });

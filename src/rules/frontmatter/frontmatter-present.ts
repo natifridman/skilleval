@@ -5,7 +5,7 @@ export const frontmatterPresent: Rule = {
     id: "frontmatter/frontmatter-present",
     type: "problem",
     defaultSeverity: "error",
-    fixable: false,
+    fixable: true,
     description: "SKILL.md must begin with YAML frontmatter",
     category: "frontmatter",
     messages: {
@@ -20,6 +20,10 @@ export const frontmatterPresent: Rule = {
       context.report({
         messageId: "missing",
         location: { startLine: 1, startColumn: 1 },
+        fix: {
+          description: "Add empty YAML frontmatter",
+          replacement: `---\nname: ${skill.dirName}\ndescription: \n---\n`,
+        },
       });
     }
   },

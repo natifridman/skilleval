@@ -18,6 +18,7 @@ export const security: Record<string, RuleSeverityConfig> = {
   "frontmatter/metadata-types": "off",
   "frontmatter/allowed-tools-format": "off",
   "frontmatter/name-no-reserved-words": "off",
+  "frontmatter/license-format": "off",
 
   "content/body-not-empty": "off",
   "content/body-token-budget": "off",
@@ -27,6 +28,7 @@ export const security: Record<string, RuleSeverityConfig> = {
   "content/references-depth": "off",
   "content/no-backslash-paths": "off",
   "content/no-ascii-art": "off",
+  "content/no-duplicate-headings": "off",
 
   "security/no-prompt-injection": "error",
   "security/no-base64-payloads": "error",

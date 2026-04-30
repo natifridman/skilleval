@@ -49,8 +49,10 @@ import { noTimeSensitiveContent } from "./best-practices/no-time-sensitive-conte
 import { noExcessiveNegation } from "./best-practices/no-excessive-negation.js";
 import { nonDescriptiveFilenames } from "./best-practices/non-descriptive-filenames.js";
 import { nameNoReservedWords } from "./frontmatter/name-no-reserved-words.js";
+import { licenseFormat } from "./frontmatter/license-format.js";
 import { noAsciiArt } from "./content/no-ascii-art.js";
 import { noBackslashPaths } from "./content/no-backslash-paths.js";
+import { noDuplicateHeadings } from "./content/no-duplicate-headings.js";
 
 const allRules = [
   // Structural
@@ -71,6 +73,7 @@ const allRules = [
   metadataTypes,
   allowedToolsFormat,
   nameNoReservedWords,
+  licenseFormat,
   // Content
   bodyNotEmpty,
   bodyTokenBudget,
@@ -80,6 +83,7 @@ const allRules = [
   referencesDepth,
   noBackslashPaths,
   noAsciiArt,
+  noDuplicateHeadings,
   // Security
   noPromptInjection,
   noBase64Payloads,
