@@ -1,5 +1,7 @@
 # skilleval
 
+> **This repository has moved to [github.com/aicatalyst-team/skill-linter](https://github.com/aicatalyst-team/skill-linter).**
+
 Linter for AI agent skill files following the [Agent Skills specification](https://agentskills.io).
 
 47 rules across 5 categories: structural, frontmatter, content, security, and best practices. Supports text, JSON, SARIF, and GitHub Actions output formats. Optional LLM-powered deep analysis via Anthropic API or Google Cloud Vertex AI.
